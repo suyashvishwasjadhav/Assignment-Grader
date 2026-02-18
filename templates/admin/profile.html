@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+
+{% block title %}My Profile - EduEval{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body" style="text-align: center; padding: 2rem;">
+                    <img src="https://images.unsplash.com/photo-1601388352547-2802c6f32eb8" alt="Profile" class="user-avatar" style="width: 150px; height: 150px; margin-bottom: 1.5rem;">
+                    <h2>{{ session.get('username') }}</h2>
+                    <p style="margin-bottom: 0.5rem;">{{ session.get('email') }}</p>
+                    <p><span class="badge badge-primary">Educator</span></p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    Organization Information
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ organization.name }}</p>
+                    <p><strong>Joined:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Role:</strong> Administrator</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    Teaching Details
+                </div>
+                <div class="card-body">
+                    <p><strong>Subject:</strong> {{ teacher.subject if teacher.subject else 'Not specified' }}</p>
+                    <p><strong>Assignments Created:</strong> {{ assignments|length }}</p>
+                    <p><strong>Student Submissions:</strong> {{ submission_count }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Edit Profile</h3>
+                </div>
+                <div class="card-body">
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="username" class="form-label">Full Name</label>
+                            <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required readonly>
+                            <small class="text-muted">Email cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" id="subject" name="subject" class="form-control" value="{{ teacher.subject if teacher.subject else '' }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" id="current_password" name="current_password" class="form-control">
+                            <small class="text-muted">Required only if you want to change your password</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" id="new_password" name="new_password" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Theme Preference</label>
+                            <div class="form-check">
+                                <input type="radio" id="theme_light" name="theme" value="light" class="form-check-input" {{ 'checked' if user.theme == 'light' or not user.theme }}>
+                                <label for="theme_light" class="form-check-label">Light</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" id="theme_dark" name="theme" value="dark" class="form-check-input" {{ 'checked' if user.theme == 'dark' }}>
+                                <label for="theme_dark" class="form-check-label">Dark</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h3>Recent Activity</h3>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% if recent_submissions %}
+                            {% for submission in recent_submissions %}
+                            <div class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h4>New Submission: {{ submission.assignment.title }}</h4>
+                                    <p>Student: {{ submission.user.username }}</p>
+                                    <p>Submitted: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    <p>Score: {{ submission.total_marks|round(2) }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div style="text-align: center; padding: 1rem;">
+                            <p>No recent activity to display.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileForm = document.getElementById('profile-form');
+        
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validation
+                const newPassword = document.getElementById('new_password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                
+                if (newPassword && newPassword !== confirmPassword) {
+                    showToast('New passwords do not match', 'error');
+                    return;
+                }
+                
+                // Show loading spinner
+                showSpinner('Updating profile...');
+                
+                // Simulate form submission
+                setTimeout(function() {
+                    hideSpinner();
+                    showToast('Profile updated successfully!', 'success');
+                    
+                    // Update theme if it changed
+                    const selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+                    const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+                    
+                    if (selectedTheme !== currentTheme) {
+                        if (selectedTheme === 'dark') {
+                            document.body.classList.add('dark-theme');
+                        } else {
+                            document.body.classList.remove('dark-theme');
+                        }
+                    }
+                }, 1500);
+            });
+        }
+    });
+</script>
+{% endblock %}

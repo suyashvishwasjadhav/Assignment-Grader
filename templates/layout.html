@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduEval - AI-Powered Assignment Evaluation{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="{% if session.get('theme') == 'dark' %}dark-theme{% endif %}">
+    <!-- Splash Screen -->
+    <div class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">EduEval</div>
+            <div class="splash-spinner"></div>
+        </div>
+    </div>
+    
+    {% if session.get('user_id') %}
+    <!-- Navbar for logged-in users -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span class="brand-text">EduEval</span>
+            </a>
+        </div>
+        
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <button id="theme-toggle" class="nav-link" aria-label="Toggle dark/light mode">
+                    <i class="fas {% if session.get('theme') == 'dark' %}fa-sun{% else %}fa-moon{% endif %}"></i>
+                </button>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="username-text">{{ session.get('username') }}</span>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('profile') if 'profile' in url_for_map else '#' }}" class="dropdown-item">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ url_for('logout') }}" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    
+    <!-- Sidebar for logged-in users -->
+    <div class="sidebar">
+        <div class="sidebar-user">
+            <img src="https://images.unsplash.com/photo-1507499036636-f716246c2c23" alt="Profile" class="user-avatar">
+            <div class="user-name">{{ session.get('username') }}</div>
+            <div class="user-role">{{ session.get('role').capitalize() }}</div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            {% if session.get('role') == 'admin' %}
+            <!-- Admin menu -->
+            <li class="sidebar-item">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('create_assignment') }}" class="sidebar-link {% if request.path == url_for('create_assignment') %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i> Create Assignment
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('admin_students') }}" class="sidebar-link {% if request.path == url_for('admin_students') %}active{% endif %}">
+                    <i class="fas fa-user-graduate"></i> Students
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('admin_admins') }}" class="sidebar-link {% if request.path == url_for('admin_admins') %}active{% endif %}">
+                    <i class="fas fa-user-tie"></i> Admins
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('admin_chat') }}" class="sidebar-link {% if request.path.startswith(url_for('admin_chat')) %}active{% endif %}">
+                    <i class="fas fa-comments"></i> Chat
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('diagram_evaluation') }}" class="sidebar-link {% if request.path == url_for('diagram_evaluation') %}active{% endif %}">
+                    <i class="fas fa-project-diagram"></i> Diagram Evaluation
+                </a>
+            </li>
+            {% else %}
+            <!-- Student menu -->
+            <li class="sidebar-item">
+                <a href="{{ url_for('student_dashboard') }}" class="sidebar-link {% if request.path == url_for('student_dashboard') %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('student_chat') }}" class="sidebar-link {% if request.path.startswith(url_for('student_chat')) %}active{% endif %}">
+                    <i class="fas fa-comments"></i> Chat with Teachers
+                </a>
+            </li>
+            {% endif %}
+            <li class="sidebar-item">
+                <a href="{{ url_for('contact') }}" class="sidebar-link {% if request.path == url_for('contact') %}active{% endif %}">
+                    <i class="fas fa-envelope"></i> Contact
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <p>&copy; {{ current_year }} EduEval. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% else %}
+    <!-- Navbar for non-logged-in users -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span class="brand-text">EduEval</span>
+            </a>
+        </div>
+        
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <button id="theme-toggle" class="nav-link" aria-label="Toggle dark/light mode">
+                    <i class="fas {% if session.get('theme') == 'dark' %}fa-sun{% else %}fa-moon{% endif %}"></i>
+                </button>
+            </li>
+            <li class="nav-item mobile-hidden">
+                <a href="{{ url_for('contact') }}" class="nav-link">
+                    <i class="fas fa-envelope"></i><span class="nav-text"> Contact</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('login') }}" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i><span class="nav-text"> Login</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('signup') }}" class="nav-link">
+                    <i class="fas fa-user-plus"></i><span class="nav-text"> Sign Up</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <!-- Content for non-logged-in users -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container" style="margin-top: 80px; padding: 0 20px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+    
+    <!-- JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

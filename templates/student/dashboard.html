@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Dashboard - EduEval{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <!-- Welcome section -->
+    <div style="margin-bottom: 2rem;">
+        <h1>Welcome, {{ user.username }}!</h1>
+        <p>Organization: <strong>{{ organization.name }}</strong></p>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-value">{{ assignments|length }}</div>
+            <div class="stat-label">Available Assignments</div>
+        </div>
+        
+        <div class="stat-card stat-success">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ submission_map|length }}</div>
+            <div class="stat-label">Completed Assignments</div>
+        </div>
+        
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-value">{{ assignments|length - submission_map|length }}</div>
+            <div class="stat-label">Pending Assignments</div>
+        </div>
+    </div>
+    
+    <!-- Assignments -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-tasks"></i> My Assignments</h2>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Status</th>
+                            <th>Deadline</th>
+                            <th>Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.title }}</td>
+                            <td>
+                                {% if assignment.id in submission_map %}
+                                <span class="status-badge status-completed">Completed</span>
+                                {% elif assignment.deadline and assignment.deadline < current_datetime %}
+                                <span class="status-badge status-overdue">Overdue</span>
+                                {% else %}
+                                <span class="status-badge status-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assignment.deadline %}
+                                {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                No deadline
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assignment.id in submission_map %}
+                                {{ submission_map[assignment.id].total_marks|round(2) }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="btn btn-sm btn-primary">
+                                    {% if assignment.id in submission_map %}
+                                    <i class="fas fa-eye"></i> View
+                                    {% else %}
+                                    <i class="fas fa-edit"></i> Submit
+                                    {% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; color: var(--light-color); margin-bottom: 1rem;">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3>No Assignments Yet</h3>
+                <p>There are no assignments available for you at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

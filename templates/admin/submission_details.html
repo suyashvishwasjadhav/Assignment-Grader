@@ -1,0 +1,760 @@
+{% extends "layout.html" %}
+
+{% block title %}Submission Details - EduEval{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <div class="card">
+        <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2><i class="fas fa-clipboard-check"></i> Submission Details</h2>
+                <button class="btn btn-success download-pdf-btn" data-submission-id="{{ submission.id }}">
+                    <i class="fas fa-file-pdf"></i> Download PDF Report
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 2rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <h4>Assignment</h4>
+                    <p>{{ assignment.title }}</p>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <h4>Student</h4>
+                    <p>{{ submission.user.username }}</p>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <h4>Submitted</h4>
+                    <p>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="card-header" style="background-color: var(--success-color); color: white;">
+                    <h3><i class="fas fa-chart-bar"></i> Overall Performance</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Total Score</h4>
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                                {% if submission.total_marks is not none %}
+                                    {{ submission.total_marks|round(2) }}
+                                {% else %}
+                                    0.00
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Relevance</h4>
+                            <div class="progress" style="height: 20px; margin-top: 10px;">
+                                <div class="progress-bar progress-bar-primary" role="progressbar" 
+                                    style="width: {{ submission.avg_relevance|default(0)|round(2) }}%;" 
+                                    aria-valuenow="{{ submission.avg_relevance|default(0)|round(2) }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ submission.avg_relevance|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Grammar</h4>
+                            <div class="progress" style="height: 20px; margin-top: 10px;">
+                                <div class="progress-bar progress-bar-success" role="progressbar" 
+                                    style="width: {{ submission.avg_grammar_score|default(0)|round(2) }}%;" 
+                                    aria-valuenow="{{ submission.avg_grammar_score|default(0)|round(2) }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ submission.avg_grammar_score|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Size Compliance</h4>
+                            <div class="progress" style="height: 20px; margin-top: 10px;">
+                                <div class="progress-bar progress-bar-warning" role="progressbar" 
+                                    style="width: {{ submission.avg_size_score|default(0)|round(2) }}%;" 
+                                    aria-valuenow="{{ submission.avg_size_score|default(0)|round(2) }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ submission.avg_size_score|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Overall Feedback:</strong> {{ submission.feedback }}
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-list-ol"></i> Question Responses</h3>
+            
+            {% for question in questions %}
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h4>Question {{ loop.index }}: {{ question.question_text }}</h4>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-star"></i> Max Marks:</strong> {{ question.max_marks }}
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-font"></i> Expected Word Count:</strong> {{ question.word_count }}
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-balance-scale"></i> Evaluation Method:</strong> 
+                            {% if question.evaluation_method == 'gemini' %}
+                            <span class="badge badge-primary">AI Evaluation</span>
+                            {% else %}
+                            <span class="badge badge-info">Answer Key</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% set response = responses.get(question.id) %}
+                    {% if response %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Student's Answer</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if response.possible_plagiarism %}
+                            <div class="alert alert-danger" style="margin-bottom: 1rem;">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>POSSIBLE PLAGIARISM DETECTED</strong><br>
+                                {{ response.plagiarism_note }}
+                            </div>
+                            {% endif %}
+                            
+                            <div style="background-color: rgba(0,0,0,0.05); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; white-space: pre-wrap;">
+                                {{ response.extracted_text }}
+                            </div>
+                            
+                            {% if response.image_paths and response.image_paths|length > 0 %}
+                            <div class="image-carousel-container" id="carousel-container-{{ response.id }}">
+                                <h6><i class="fas fa-images"></i> Student Answer Images:</h6>
+                                <div class="carousel-controls">
+                                    <button class="carousel-prev-btn"><i class="fas fa-chevron-left"></i></button>
+                                    <span class="carousel-counter">Image 1 of {{ response.image_paths|length }}</span>
+                                    <button class="carousel-next-btn"><i class="fas fa-chevron-right"></i></button>
+                                    <button class="zoom-in-btn"><i class="fas fa-search-plus"></i></button>
+                                    <button class="zoom-out-btn"><i class="fas fa-search-minus"></i></button>
+                                    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+                                </div>
+                                
+                                <div class="image-carousel" data-current="0" data-zoom="1" data-response-id="{{ response.id }}">
+                                    {% for image_path in response.image_paths %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+                                        <img src="{{ url_for('serve_upload', filename=image_path) }}" alt="Student Answer Image {{ loop.index }}" class="student-answer-image" data-src="{{ url_for('serve_upload', filename=image_path) }}">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Fullscreen Modal for this response's images -->
+                            <div id="image-modal-{{ response.id }}" class="modal-overlay image-fullscreen-modal">
+                                <div class="modal-dialog modal-fullscreen">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Student Answer Image</h4>
+                                            <button type="button" class="modal-close">&times;</button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="fullscreen-image-container">
+                                                <div class="fullscreen-controls">
+                                                    <button class="fullscreen-prev-btn"><i class="fas fa-chevron-left"></i></button>
+                                                    <span class="fullscreen-counter">Image 1 of {{ response.image_paths|length }}</span>
+                                                    <button class="fullscreen-next-btn"><i class="fas fa-chevron-right"></i></button>
+                                                    <button class="fullscreen-zoom-in-btn"><i class="fas fa-search-plus"></i></button>
+                                                    <button class="fullscreen-zoom-out-btn"><i class="fas fa-search-minus"></i></button>
+                                                    <button class="fullscreen-reset-btn"><i class="fas fa-sync-alt"></i></button>
+                                                </div>
+                                                <div class="fullscreen-image-wrapper" data-current="0" data-zoom="1">
+                                                    {% for image_path in response.image_paths %}
+                                                    <div class="fullscreen-image-item {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+                                                        <img src="{{ url_for('serve_upload', filename=image_path) }}" alt="Student Answer Image {{ loop.index }}" class="fullscreen-image">
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Score:</strong> {{ response.marks_awarded|default(0)|round(2) }} / {{ question.max_marks }}
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Word Count:</strong> {{ response.word_count_actual }} / {{ question.word_count }}
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Relevance:</strong> {{ response.relevance_score|default(0)|round(2) }}%
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Grammar:</strong> {{ response.grammar_score|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                            
+                            {% if response.first_five_words %}
+                            <div style="margin-bottom: 1rem;">
+                                <strong>First words:</strong> 
+                                <span class="badge badge-info">{{ response.first_five_words }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="alert alert-info">
+                                <strong>Feedback:</strong> {{ response.feedback }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> No answer submitted for this question.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to All Submissions
+                </a>
+                <button class="btn btn-success download-pdf-btn" data-submission-id="{{ submission.id }}">
+                    <i class="fas fa-file-pdf"></i> Download PDF Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .image-carousel-container {
+        margin: 20px 0;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: #ffffff;
+        padding: 20px;
+        width: 100%;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .image-carousel-container h6 {
+        margin: 0 0 15px 0;
+        font-size: 1.1rem;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .image-carousel-container h6 i {
+        color: var(--primary-color);
+    }
+    
+    .carousel-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+        gap: 8px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .carousel-controls button {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+        color: #555;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+    }
+    
+    .carousel-controls button:hover {
+        background: #f0f0f0;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: var(--primary-color);
+    }
+
+    .carousel-counter {
+        padding: 6px 12px;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        min-width: 100px;
+        text-align: center;
+        color: #555;
+    }
+    
+    .image-carousel {
+        position: relative;
+        width: 100%;
+        height: 600px;
+        overflow: hidden;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .carousel-item {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    
+    .carousel-item.active {
+        display: flex;
+    }
+    
+    .student-answer-image {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    @media (max-width: 1200px) {
+        .image-carousel {
+            height: 500px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .image-carousel-container {
+            padding: 15px;
+        }
+        
+        .image-carousel {
+            height: 400px;
+        }
+        
+        .carousel-controls {
+            padding: 8px;
+            gap: 6px;
+        }
+        
+        .carousel-controls button {
+            padding: 6px 10px;
+            font-size: 13px;
+            min-width: 32px;
+        }
+        
+        .carousel-counter {
+            font-size: 13px;
+            min-width: 90px;
+            padding: 5px 10px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .image-carousel {
+            height: 300px;
+        }
+        
+        .carousel-controls {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .carousel-controls button {
+            padding: 5px 8px;
+            font-size: 12px;
+            min-width: 28px;
+        }
+    }
+    
+    /* Fullscreen modal styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+    }
+    
+    .modal-fullscreen {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .modal-header {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px 10px;
+    }
+
+    .modal-close:hover {
+        color: #ff4444;
+    }
+    
+    .fullscreen-image-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 60px);
+        background: #000;
+    }
+    
+    .fullscreen-image-wrapper {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: auto;
+    }
+    
+    .fullscreen-image {
+        width: auto;
+        height: auto;
+        max-width: 95%;
+        max-height: 95%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    
+    .fullscreen-controls {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px;
+        border-radius: 8px;
+        backdrop-filter: blur(5px);
+    }
+    
+    .fullscreen-controls button {
+        padding: 8px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .fullscreen-controls button:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pdf.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all carousels
+        document.querySelectorAll('.image-carousel-container').forEach(container => {
+            const carousel = container.querySelector('.image-carousel');
+            const counter = container.querySelector('.carousel-counter');
+            const items = carousel.querySelectorAll('.carousel-item');
+            let currentZoom = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+            
+            // Previous button
+            container.querySelector('.carousel-prev-btn').addEventListener('click', () => {
+                const current = parseInt(carousel.dataset.current);
+                const newIndex = (current - 1 + items.length) % items.length;
+                updateCarousel(carousel, items, counter, newIndex);
+                resetImagePosition(carousel);
+            });
+            
+            // Next button
+            container.querySelector('.carousel-next-btn').addEventListener('click', () => {
+                const current = parseInt(carousel.dataset.current);
+                const newIndex = (current + 1) % items.length;
+                updateCarousel(carousel, items, counter, newIndex);
+                resetImagePosition(carousel);
+            });
+            
+            // Zoom in
+            container.querySelector('.zoom-in-btn').addEventListener('click', () => {
+                currentZoom = Math.min(currentZoom * 1.2, 3);
+                updateZoom(carousel, currentZoom);
+                resetImagePosition(carousel);
+            });
+            
+            // Zoom out
+            container.querySelector('.zoom-out-btn').addEventListener('click', () => {
+                currentZoom = Math.max(currentZoom / 1.2, 0.5);
+                updateZoom(carousel, currentZoom);
+                resetImagePosition(carousel);
+            });
+            
+            // Mouse events for panning
+            carousel.addEventListener('mousedown', (e) => {
+                if (currentZoom > 1) {
+                    isDragging = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                    carousel.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const currentX = e.clientX - startX;
+                const currentY = e.clientY - startY;
+                
+                // Get the current image
+                const activeImage = carousel.querySelector('.carousel-item.active img');
+                if (!activeImage) return;
+                
+                // Calculate bounds
+                const bounds = activeImage.getBoundingClientRect();
+                const containerBounds = carousel.getBoundingClientRect();
+                
+                // Calculate maximum allowed translation
+                const maxX = (bounds.width * currentZoom - containerBounds.width) / 2;
+                const maxY = (bounds.height * currentZoom - containerBounds.height) / 2;
+                
+                // Constrain the translation within bounds
+                translateX = Math.max(-maxX, Math.min(maxX, currentX));
+                translateY = Math.max(-maxY, Math.min(maxY, currentY));
+                
+                // Apply the translation
+                activeImage.style.transform = `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                carousel.style.cursor = 'grab';
+            });
+
+            // Fullscreen
+            container.querySelector('.fullscreen-btn').addEventListener('click', () => {
+                const modalId = `image-modal-${carousel.dataset.responseId}`;
+                const modal = document.getElementById(modalId);
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+
+            // Handle keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (carousel.contains(e.target) || carousel.matches(':focus-within')) {
+                    if (e.key === 'ArrowLeft') {
+                        const current = parseInt(carousel.dataset.current);
+                        const newIndex = (current - 1 + items.length) % items.length;
+                        updateCarousel(carousel, items, counter, newIndex);
+                        resetImagePosition(carousel);
+                    } else if (e.key === 'ArrowRight') {
+                        const current = parseInt(carousel.dataset.current);
+                        const newIndex = (current + 1) % items.length;
+                        updateCarousel(carousel, items, counter, newIndex);
+                        resetImagePosition(carousel);
+                    }
+                }
+            });
+        });
+        
+        // Initialize all fullscreen modals
+        document.querySelectorAll('.image-fullscreen-modal').forEach(modal => {
+            const wrapper = modal.querySelector('.fullscreen-image-wrapper');
+            const counter = modal.querySelector('.fullscreen-counter');
+            const items = wrapper.querySelectorAll('.fullscreen-image-item');
+            let currentZoom = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+            
+            // Close button
+            modal.querySelector('.modal-close').addEventListener('click', () => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Previous button
+            modal.querySelector('.fullscreen-prev-btn').addEventListener('click', () => {
+                const current = parseInt(wrapper.dataset.current);
+                const newIndex = (current - 1 + items.length) % items.length;
+                updateCarousel(wrapper, items, counter, newIndex);
+                resetImagePosition(wrapper);
+            });
+            
+            // Next button
+            modal.querySelector('.fullscreen-next-btn').addEventListener('click', () => {
+                const current = parseInt(wrapper.dataset.current);
+                const newIndex = (current + 1) % items.length;
+                updateCarousel(wrapper, items, counter, newIndex);
+                resetImagePosition(wrapper);
+            });
+            
+            // Zoom in
+            modal.querySelector('.fullscreen-zoom-in-btn').addEventListener('click', () => {
+                currentZoom = Math.min(currentZoom * 1.2, 5);
+                updateZoom(wrapper, currentZoom);
+                resetImagePosition(wrapper);
+            });
+            
+            // Zoom out
+            modal.querySelector('.fullscreen-zoom-out-btn').addEventListener('click', () => {
+                currentZoom = Math.max(currentZoom / 1.2, 0.5);
+                updateZoom(wrapper, currentZoom);
+                resetImagePosition(wrapper);
+            });
+            
+            // Reset zoom
+            modal.querySelector('.fullscreen-reset-btn').addEventListener('click', () => {
+                currentZoom = 1;
+                updateZoom(wrapper, currentZoom);
+                resetImagePosition(wrapper);
+            });
+
+            // Mouse events for panning in fullscreen
+            wrapper.addEventListener('mousedown', (e) => {
+                if (currentZoom > 1) {
+                    isDragging = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                    wrapper.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const currentX = e.clientX - startX;
+                const currentY = e.clientY - startY;
+                
+                // Get the current image
+                const activeImage = wrapper.querySelector('.fullscreen-image-item.active img');
+                if (!activeImage) return;
+                
+                // Calculate bounds
+                const bounds = activeImage.getBoundingClientRect();
+                const containerBounds = wrapper.getBoundingClientRect();
+                
+                // Calculate maximum allowed translation
+                const maxX = (bounds.width * currentZoom - containerBounds.width) / 2;
+                const maxY = (bounds.height * currentZoom - containerBounds.height) / 2;
+                
+                // Constrain the translation within bounds
+                translateX = Math.max(-maxX, Math.min(maxX, currentX));
+                translateY = Math.max(-maxY, Math.min(maxY, currentY));
+                
+                // Apply the translation
+                activeImage.style.transform = `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                wrapper.style.cursor = 'grab';
+            });
+
+            // Handle keyboard events for fullscreen
+            document.addEventListener('keydown', (e) => {
+                if (modal.style.display === 'block') {
+                    if (e.key === 'Escape') {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = '';
+                    } else if (e.key === 'ArrowLeft') {
+                        const current = parseInt(wrapper.dataset.current);
+                        const newIndex = (current - 1 + items.length) % items.length;
+                        updateCarousel(wrapper, items, counter, newIndex);
+                        resetImagePosition(wrapper);
+                    } else if (e.key === 'ArrowRight') {
+                        const current = parseInt(wrapper.dataset.current);
+                        const newIndex = (current + 1) % items.length;
+                        updateCarousel(wrapper, items, counter, newIndex);
+                        resetImagePosition(wrapper);
+                    }
+                }
+            });
+        });
+    });
+
+    function updateCarousel(container, items, counter, newIndex) {
+        items.forEach(item => item.classList.remove('active'));
+        items[newIndex].classList.add('active');
+        container.dataset.current = newIndex;
+        counter.textContent = `Image ${newIndex + 1} of ${items.length}`;
+    }
+
+    function updateZoom(container, zoom) {
+        container.dataset.zoom = zoom;
+        const images = container.querySelectorAll('img');
+        images.forEach(img => {
+            img.style.transform = `scale(${zoom})`;
+        });
+    }
+
+    function resetImagePosition(container) {
+        const images = container.querySelectorAll('img');
+        images.forEach(img => {
+            img.style.transform = `scale(${container.dataset.zoom})`;
+        });
+        translateX = 0;
+        translateY = 0;
+    }
+
+    // Download PDF buttons initialization
+    const pdfButtons = document.querySelectorAll('.download-pdf-btn');
+    pdfButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const submissionId = this.getAttribute('data-submission-id');
+            window.location.href = `/admin/generate-pdf/${submissionId}`;
+        });
+    });
+</script>
+{% endblock %}

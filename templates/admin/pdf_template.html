@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Report: {{ submission.user.username }} - {{ assignment.title }}</title>
+    
+    <style>
+        /* PDF Print Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            padding: 2rem;
+            font-size: 12pt;
+        }
+        
+        .pdf-report {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        h1 {
+            font-size: 24pt;
+            margin-bottom: 0.5rem;
+        }
+        
+        h2 {
+            font-size: 18pt;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 14pt;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+            break-inside: avoid;
+        }
+        
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .meta-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            height: 20px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .progress-primary {
+            background-color: #3498db;
+        }
+        
+        .progress-success {
+            background-color: #2ecc71;
+        }
+        
+        .progress-warning {
+            background-color: #f39c12;
+        }
+        
+        .question {
+            margin-bottom: 2rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            break-inside: avoid;
+        }
+        
+        .question-header {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .question-body {
+            padding: 1rem;
+        }
+        
+        .response {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+        
+        .info-box {
+            background-color: #e1f5fe;
+            border-left: 4px solid #03a9f4;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="pdf-report">
+    <button id="print-pdf-btn" class="print-btn" style="position: fixed; top: 20px; right: 20px; background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        <i class="fas fa-print"></i> Print Report
+    </button>
+    
+    <div class="header">
+        <div class="logo">EduEval</div>
+        <h1>Assignment Submission Report</h1>
+    </div>
+    
+    <div class="section">
+        <h2>Overview</h2>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <h3>Assignment</h3>
+                <p>{{ assignment.title }}</p>
+            </div>
+            
+            <div class="meta-item">
+                <h3>Student</h3>
+                <p>{{ submission.user.username }}</p>
+                <p>{{ submission.user.email }}</p>
+            </div>
+            
+            <div class="meta-item">
+                <h3>Submission Date</h3>
+                <p>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>Performance Overview</h3>
+            
+            <div class="stats-container">
+                <div class="stat-item">
+                    <h4>Total Score</h4>
+                    <p style="font-size: 1.5rem; font-weight: bold;">
+                        {% if submission.total_marks is not none %}
+                            {{ submission.total_marks|round(2) }}
+                        {% else %}
+                            0.00
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="stat-item">
+                    <h4>Relevance</h4>
+                    <div class="progress-container">
+                        <div class="progress-bar progress-primary" style="width: {{ submission.avg_relevance|default(0)|round(2) }}%;">
+                            {{ submission.avg_relevance|default(0)|round(2) }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-item">
+                    <h4>Grammar</h4>
+                    <div class="progress-container">
+                        <div class="progress-bar progress-success" style="width: {{ submission.avg_grammar_score|default(0)|round(2) }}%;">
+                            {{ submission.avg_grammar_score|default(0)|round(2) }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-item">
+                    <h4>Size Compliance</h4>
+                    <div class="progress-container">
+                        <div class="progress-bar progress-warning" style="width: {{ submission.avg_size_score|default(0)|round(2) }}%;">
+                            {{ submission.avg_size_score|default(0)|round(2) }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>Overall Feedback:</strong> {{ submission.feedback }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="section page-break">
+        <h2>Question Responses</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Score</th>
+                    <th>Word Count</th>
+                    <th>Relevance</th>
+                    <th>Grammar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in questions %}
+                {% set response = responses.get(question.id) %}
+                <tr>
+                    <td>Q{{ loop.index }}</td>
+                    <td>
+                        {% if response %}
+                        {{ response.marks_awarded|round(2) }} / {{ question.max_marks }}
+                        {% else %}
+                        Not answered
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if response %}
+                        {{ response.word_count_actual }} / {{ question.word_count }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if response %}
+                        {{ response.relevance_score|round(2) }}%
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if response %}
+                        {{ response.grammar_score|round(2) }}%
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% for question in questions %}
+    <div class="section {% if not loop.last %}page-break{% endif %}">
+        <div class="question">
+            <div class="question-header">
+                <h3>Question {{ loop.index }}</h3>
+                <p>{{ question.question_text }}</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;">
+                    <div><strong>Max Marks:</strong> {{ question.max_marks }}</div>
+                    <div><strong>Expected Word Count:</strong> {{ question.word_count }}</div>
+                    <div>
+                        <strong>Evaluation Method:</strong> 
+                        {% if question.evaluation_method == 'gemini' %}
+                        AI Evaluation
+                        {% else %}
+                        Answer Key
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-body">
+                {% set response = responses.get(question.id) %}
+                {% if response %}
+                <h4>Student's Answer</h4>
+                <div class="response">
+                    {{ response.extracted_text }}
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h4>Score</h4>
+                        <p style="font-weight: bold;">{{ response.marks_awarded|round(2) }} / {{ question.max_marks }}</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h4>Word Count</h4>
+                        <p>{{ response.word_count_actual }} / {{ question.word_count }}</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h4>Relevance</h4>
+                        <div class="progress-container">
+                            <div class="progress-bar progress-primary" style="width: {{ response.relevance_score|round(2) }}%;">
+                                {{ response.relevance_score|round(2) }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h4>Grammar</h4>
+                        <div class="progress-container">
+                            <div class="progress-bar progress-success" style="width: {{ response.grammar_score|round(2) }}%;">
+                                {{ response.grammar_score|round(2) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if response.first_five_words %}
+                <div style="margin: 1rem 0;">
+                    <strong>First words:</strong> {{ response.first_five_words }}
+                </div>
+                {% endif %}
+                
+                <div class="info-box">
+                    <strong>Feedback:</strong> {{ response.feedback }}
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+                    <h4>Not Answered</h4>
+                    <p>The student did not provide an answer for this question.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="footer">
+        <p>Generated by EduEval | {{ generation_time }}</p>
+        <p>AI-Powered Assignment Evaluation Platform</p>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/pdf.js') }}"></script>
+</body>
+</html>

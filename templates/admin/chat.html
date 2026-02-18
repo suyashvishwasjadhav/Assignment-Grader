@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Chat with Students - EduEval{% endblock %}
+
+{% block content %}
+<div class="chat-container animate-fadeIn">
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h3><i class="fas fa-comments"></i> Students</h3>
+        </div>
+        <ul class="chat-users">
+            {% for student in students %}
+            <li class="chat-user {% if chat_partner and chat_partner.id == student.id %}active{% endif %}" data-user-id="{{ student.id }}">
+                <img src="https://images.unsplash.com/photo-{% if loop.index is divisibleby 2 %}1438761681033-6461ffad8d80{% else %}1628891435222-065925dcb365{% endif %}" alt="{{ student.username }}" class="chat-user-avatar">
+                <div class="chat-user-name">{{ student.username }}</div>
+            </li>
+            {% else %}
+            <li class="chat-user" style="cursor: default; opacity: 0.7;">
+                <div style="padding: 1rem; text-align: center;">No students available</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="chat-main">
+        {% if chat_partner %}
+        <div class="chat-header">
+            <img src="https://images.unsplash.com/photo-{% if chat_partner.id is divisibleby 2 %}1438761681033-6461ffad8d80{% else %}1628891435222-065925dcb365{% endif %}" alt="{{ chat_partner.username }}" class="chat-header-avatar">
+            <div class="chat-header-name">{{ chat_partner.username }}</div>
+        </div>
+        
+        <div id="chat-messages" class="chat-messages" data-user-id="{{ session.get('user_id') }}">
+            {% for message in messages %}
+            <div class="chat-message {% if message.sender_id == session.get('user_id') %}chat-message-sent{% else %}chat-message-received{% endif %}" data-message-id="{{ message.id }}">
+                {{ message.message }}
+                <div class="chat-message-time">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--text-color); opacity: 0.7;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <form id="chat-form" class="chat-form">
+            <input type="hidden" id="chat-partner-id" value="{{ chat_partner.id }}">
+            <input type="text" id="message-input" class="chat-input" placeholder="Type your message..." required>
+            <button type="submit" class="chat-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+        {% else %}
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-color); opacity: 0.7;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>Select a student to start chatting</h3>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

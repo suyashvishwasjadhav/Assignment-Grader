@@ -1,0 +1,629 @@
+{% extends "layout.html" %}
+
+{% block title %}Diagram Evaluation - EduEval{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-project-diagram"></i> Diagram Evaluation</h2>
+            <p class="text-muted">Upload a reference diagram and a student submission to compare them</p>
+        </div>
+        <div class="card-body">
+            <div id="upload-section">
+                <form id="diagram-upload-form" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="reference-upload">
+                                    <strong>Reference Diagram (Answer Key)</strong>
+                                </label>
+                                <div class="upload-container" id="reference-upload-container">
+                                    <input type="file" name="reference" id="reference-upload" accept="image/*" style="display:none;">
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-upload"></i>
+                                        <p>Click or drag a file here</p>
+                                        <p class="upload-hint">Accepted formats: JPG, PNG</p>
+                                    </div>
+                                    <div class="upload-preview" id="reference-preview" style="display:none;">
+                                        <img src="" alt="Reference diagram preview" id="reference-preview-img">
+                                        <div class="upload-info">
+                                            <span class="upload-filename" id="reference-filename"></span>
+                                            <button type="button" class="btn btn-sm btn-danger upload-remove" id="reference-remove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="submission-upload">
+                                    <strong>Student Submission</strong>
+                                </label>
+                                <div class="upload-container" id="submission-upload-container">
+                                    <input type="file" name="submission" id="submission-upload" accept="image/*" style="display:none;">
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-upload"></i>
+                                        <p>Click or drag a file here</p>
+                                        <p class="upload-hint">Accepted formats: JPG, PNG</p>
+                                    </div>
+                                    <div class="upload-preview" id="submission-preview" style="display:none;">
+                                        <img src="" alt="Submission diagram preview" id="submission-preview-img">
+                                        <div class="upload-info">
+                                            <span class="upload-filename" id="submission-filename"></span>
+                                            <button type="button" class="btn btn-sm btn-danger upload-remove" id="submission-remove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <label for="diagram-question">
+                            <strong>Question or Instruction (Optional)</strong>
+                        </label>
+                        <textarea id="diagram-question" name="question" class="form-control" rows="3" placeholder="Enter the question or diagram description..."></textarea>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="analyze-btn" disabled>
+                            <i class="fas fa-bolt"></i> Analyze Diagrams
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="results-section" style="display:none;">
+                <div class="result-header">
+                    <h3>Analysis Results</h3>
+                    <div class="diagram-comparison">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="result-image-container">
+                                    <h4>Reference Diagram</h4>
+                                    <img src="" alt="Reference diagram" id="result-reference-img" class="result-image">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="result-image-container">
+                                    <h4>Student Submission</h4>
+                                    <img src="" alt="Student submission" id="result-submission-img" class="result-image">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h4 class="m-0"><i class="fas fa-chart-bar"></i> Evaluation Metrics</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="metrics-container">
+                                        <div class="metric">
+                                            <div class="metric-label">Accuracy</div>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-primary" id="accuracy-bar" role="progressbar" 
+                                                     style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="metric">
+                                            <div class="metric-label">Match Percentage</div>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-success" id="match-bar" role="progressbar" 
+                                                     style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="metric">
+                                            <div class="metric-label">Similarity Score</div>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-info" id="similarity-bar" role="progressbar" 
+                                                     style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                    0.0
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="metric">
+                                            <div class="metric-label">Plagiarism Detection</div>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-warning" id="plagiarism-bar" role="progressbar" 
+                                                     style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>Relevance:</strong> <span id="relevance-value">N/A</span>
+                                        </div>
+                                        <div>
+                                            <strong>Diagram Size:</strong> <span id="size-value">N/A</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h4 class="m-0"><i class="fas fa-graduation-cap"></i> Evaluation Summary</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div id="evaluation-summary">
+                                        <p class="placeholder-text">Analysis results will appear here...</p>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <button type="button" class="btn btn-outline-primary" id="new-analysis-btn">
+                                        <i class="fas fa-redo"></i> New Analysis
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" id="save-result-btn">
+                                        <i class="fas fa-save"></i> Save Result
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .upload-container {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .upload-container:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+    
+    .upload-container.active {
+        border-color: var(--primary-color);
+        background-color: rgba(var(--primary-color-rgb), 0.05);
+    }
+    
+    .upload-placeholder {
+        padding: 40px 20px;
+    }
+    
+    .upload-placeholder i {
+        font-size: 48px;
+        color: var(--text-muted-color);
+        margin-bottom: 15px;
+    }
+    
+    .upload-placeholder p {
+        margin-bottom: 5px;
+        color: var(--text-color);
+    }
+    
+    .upload-hint {
+        font-size: 0.8rem;
+        color: var(--text-muted-color);
+    }
+    
+    .upload-preview {
+        padding: 10px;
+    }
+    
+    .upload-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .upload-filename {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 80%;
+    }
+    
+    .result-image-container {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .result-image {
+        max-width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        background-color: white;
+    }
+    
+    .metrics-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .metric {
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+    
+    .progress {
+        height: 24px;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: width 1s ease;
+    }
+    
+    #evaluation-summary {
+        min-height: 200px;
+    }
+    
+    .placeholder-text {
+        color: var(--text-muted-color);
+        font-style: italic;
+    }
+    
+    /* Loading animation */
+    .analyzing {
+        position: relative;
+    }
+    
+    .analyzing::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        z-index: 5;
+    }
+    
+    .analyzing::before {
+        content: "Analyzing...";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File upload elements
+        const referenceUpload = document.getElementById('reference-upload');
+        const submissionUpload = document.getElementById('submission-upload');
+        const referenceContainer = document.getElementById('reference-upload-container');
+        const submissionContainer = document.getElementById('submission-upload-container');
+        const referencePreview = document.getElementById('reference-preview');
+        const submissionPreview = document.getElementById('submission-preview');
+        const referencePreviewImg = document.getElementById('reference-preview-img');
+        const submissionPreviewImg = document.getElementById('submission-preview-img');
+        const referenceFilename = document.getElementById('reference-filename');
+        const submissionFilename = document.getElementById('submission-filename');
+        const referenceRemove = document.getElementById('reference-remove');
+        const submissionRemove = document.getElementById('submission-remove');
+        
+        // Form and button elements
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const uploadForm = document.getElementById('diagram-upload-form');
+        const uploadSection = document.getElementById('upload-section');
+        const resultsSection = document.getElementById('results-section');
+        const newAnalysisBtn = document.getElementById('new-analysis-btn');
+        const saveResultBtn = document.getElementById('save-result-btn');
+        
+        // Result elements
+        const resultReferenceImg = document.getElementById('result-reference-img');
+        const resultSubmissionImg = document.getElementById('result-submission-img');
+        const accuracyBar = document.getElementById('accuracy-bar');
+        const matchBar = document.getElementById('match-bar');
+        const similarityBar = document.getElementById('similarity-bar');
+        const plagiarismBar = document.getElementById('plagiarism-bar');
+        const relevanceValue = document.getElementById('relevance-value');
+        const sizeValue = document.getElementById('size-value');
+        const evaluationSummary = document.getElementById('evaluation-summary');
+        
+        // Initialize drag and drop for reference upload
+        initializeUpload(referenceContainer, referenceUpload, referencePreview, referencePreviewImg, referenceFilename);
+        
+        // Initialize drag and drop for submission upload
+        initializeUpload(submissionContainer, submissionUpload, submissionPreview, submissionPreviewImg, submissionFilename);
+        
+        // Handle file removal
+        referenceRemove.addEventListener('click', function(e) {
+            e.stopPropagation();
+            clearFileUpload(referenceUpload, referencePreview, referencePreviewImg, referenceFilename);
+            checkFormValidity();
+        });
+        
+        submissionRemove.addEventListener('click', function(e) {
+            e.stopPropagation();
+            clearFileUpload(submissionUpload, submissionPreview, submissionPreviewImg, submissionFilename);
+            checkFormValidity();
+        });
+        
+        // Check if both files are uploaded to enable the analyze button
+        function checkFormValidity() {
+            if (referenceUpload.files.length > 0 && submissionUpload.files.length > 0) {
+                analyzeBtn.disabled = false;
+            } else {
+                analyzeBtn.disabled = true;
+            }
+        }
+        
+        // Handle form submission
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            uploadSection.classList.add('analyzing');
+            analyzeBtn.disabled = true;
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('reference', referenceUpload.files[0]);
+            formData.append('submission', submissionUpload.files[0]);
+            
+            // Add question if provided
+            const question = document.getElementById('diagram-question').value;
+            if (question) {
+                formData.append('question', question);
+            }
+            
+            // Send to server for analysis
+            fetch('/admin/analyze-diagrams', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading state
+                uploadSection.classList.remove('analyzing');
+                
+                if (data.status === 'success') {
+                    displayResults(data);
+                } else {
+                    showToast(data.error || 'Error analyzing diagrams', 'error');
+                    analyzeBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                uploadSection.classList.remove('analyzing');
+                analyzeBtn.disabled = false;
+                console.error('Error:', error);
+                showToast('An error occurred during analysis', 'error');
+            });
+        });
+        
+        // Display analysis results
+        function displayResults(data) {
+            // Hide upload section and show results
+            uploadSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+            
+            // Set result images
+            const referenceFile = referenceUpload.files[0];
+            const submissionFile = submissionUpload.files[0];
+            
+            // Create image URLs
+            const referenceUrl = URL.createObjectURL(referenceFile);
+            const submissionUrl = URL.createObjectURL(submissionFile);
+            
+            resultReferenceImg.src = referenceUrl;
+            resultSubmissionImg.src = submissionUrl;
+            
+            // Update metrics
+            function updateProgressBar(bar, value, isPercentage = true) {
+                // Extract numeric value from strings like "85%" or "0.85"
+                let numericValue;
+                if (isPercentage) {
+                    numericValue = parseFloat(value.replace('%', ''));
+                } else {
+                    numericValue = parseFloat(value) * 100; // Convert 0.0-1.0 to percentage
+                }
+                
+                bar.style.width = `${numericValue}%`;
+                bar.setAttribute('aria-valuenow', numericValue);
+                bar.textContent = isPercentage ? value : value;
+            }
+            
+            // Parse data
+            const accuracy = data.accuracy || '0%';
+            const matchPercentage = data.match_percentage || '0%';
+            const similarityScore = parseFloat(data.similarity_score || 0).toFixed(2);
+            const plagiarism = data.plagiarism || '0%';
+            const relevance = data.relevance || 'Low';
+            const diagramSize = data.diagram_size || 'Unknown';
+            
+            // Update progress bars with animation
+            setTimeout(() => {
+                updateProgressBar(accuracyBar, accuracy);
+                updateProgressBar(matchBar, matchPercentage);
+                updateProgressBar(similarityBar, similarityScore, false);
+                updateProgressBar(plagiarismBar, plagiarism);
+            }, 100);
+            
+            // Update text values
+            relevanceValue.textContent = relevance;
+            sizeValue.textContent = diagramSize;
+            
+            // Create evaluation summary
+            const summaryHTML = `
+                <p>The student's diagram shows ${accuracy} accuracy when compared to the reference solution.</p>
+                <p>There is a ${matchPercentage} match in overall structure and content elements.</p>
+                <p>The similarity score of ${similarityScore} indicates ${getSimilarityDescription(similarityScore)}.</p>
+                ${parseFloat(plagiarism) > 20 ? `<p class="text-warning"><strong>Note:</strong> The plagiarism detection shows ${plagiarism} of content may be directly copied.</p>` : ''}
+                <p>The diagram relevance is rated as <strong>${relevance}</strong>, indicating ${getRelevanceDescription(relevance)}.</p>
+                <p>Diagram complexity: ${diagramSize}</p>
+            `;
+            
+            evaluationSummary.innerHTML = summaryHTML;
+            
+            // Revoke object URLs when done
+            saveResultBtn.addEventListener('click', function() {
+                // Here you'd typically save to database
+                showToast('Result saved successfully!', 'success');
+            });
+            
+            newAnalysisBtn.addEventListener('click', function() {
+                // Reset form and return to upload view
+                uploadForm.reset();
+                clearFileUpload(referenceUpload, referencePreview, referencePreviewImg, referenceFilename);
+                clearFileUpload(submissionUpload, submissionPreview, submissionPreviewImg, submissionFilename);
+                
+                // Show upload section and hide results
+                uploadSection.style.display = 'block';
+                resultsSection.style.display = 'none';
+                
+                // Revoke object URLs
+                URL.revokeObjectURL(referenceUrl);
+                URL.revokeObjectURL(submissionUrl);
+            });
+        }
+        
+        function getSimilarityDescription(score) {
+            score = parseFloat(score);
+            if (score >= 0.8) return 'a very strong match to the reference solution';
+            if (score >= 0.6) return 'a good match to the reference solution';
+            if (score >= 0.4) return 'a moderate match to the reference solution';
+            if (score >= 0.2) return 'a weak match to the reference solution';
+            return 'a very poor match to the reference solution';
+        }
+        
+        function getRelevanceDescription(relevance) {
+            switch(relevance.toLowerCase()) {
+                case 'high':
+                    return 'the submission is highly relevant to the task';
+                case 'medium':
+                    return 'the submission is moderately relevant to the task';
+                case 'low':
+                    return 'the submission has limited relevance to the task';
+                default:
+                    return 'the relevance could not be determined';
+            }
+        }
+        
+        // Helper functions for file upload
+        function initializeUpload(container, fileInput, preview, previewImg, filenameEl) {
+            // Click on container to trigger file input
+            container.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        preview.style.display = 'block';
+                        container.querySelector('.upload-placeholder').style.display = 'none';
+                        filenameEl.textContent = file.name;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Check if both files are selected
+                    checkFormValidity();
+                }
+            });
+            
+            // Handle drag and drop
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                container.classList.add('active');
+            });
+            
+            container.addEventListener('dragleave', () => {
+                container.classList.remove('active');
+            });
+            
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                container.classList.remove('active');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    
+                    // Trigger change event manually
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        }
+        
+        function clearFileUpload(fileInput, preview, previewImg, filenameEl) {
+            fileInput.value = '';
+            preview.style.display = 'none';
+            previewImg.src = '';
+            filenameEl.textContent = '';
+            
+            const container = preview.closest('.upload-container');
+            container.querySelector('.upload-placeholder').style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

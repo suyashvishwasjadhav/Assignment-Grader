@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Database
+instance/
+*.db
+
+# Uploads
+uploads/
+/static/uploads/diagrams/
+
+# OS
+.DS_Store

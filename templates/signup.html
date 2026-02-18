@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block title %}Sign Up - EduEval{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card animate-fadeIn" style="max-width: 600px;">
+        <div class="auth-header">
+            <h2 class="auth-title">
+                <i class="fas fa-user-plus"></i> 
+                {{ "Teacher Registration" if role == 'admin' else "Student Registration" }}
+            </h2>
+        </div>
+        
+        <div class="auth-body">
+            <!-- Google Sign Up Button -->
+            <a href="{{ url_for('google_login', role=role) }}" class="auth-social-btn btn-google">
+                <i class="fab fa-google"></i> Continue with Google
+            </a>
+            
+            <div class="auth-divider">
+                <div class="auth-divider-line"></div>
+                <div class="auth-divider-text">OR</div>
+                <div class="auth-divider-line"></div>
+            </div>
+            
+            <!-- Registration Form -->
+            <form method="POST" action="{{ url_for('signup') }}">
+                <input type="hidden" name="role" value="{{ role }}">
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Full Name</label>
+                    <input type="text" id="username" name="username" class="form-control" required 
+                           value="{{ session.get('oauth_name', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" required
+                           value="{{ session.get('oauth_email', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                </div>
+                
+                {% if role == 'admin' %}
+                <!-- Organization options for teachers -->
+                <div class="form-group">
+                    <label class="form-label">Organization</label>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" id="use_existing_org" name="use_existing_org" class="form-check-input" onchange="toggleOrgFields()">
+                        <label for="use_existing_org" class="form-check-label">Join existing organization</label>
+                    </div>
+                    
+                    <div id="existing_org_field" style="display: none; margin-top: 10px;">
+                        <select name="existing_organization" class="form-select">
+                            <option value="">Select an organization</option>
+                            {% for org in organizations %}
+                            <option value="{{ org }}">{{ org }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="new_org_field" style="margin-top: 10px;">
+                        <label for="organization_name" class="form-label">Create new organization</label>
+                        <input type="text" id="organization_name" name="organization_name" class="form-control">
+                    </div>
+                </div>
+                {% else %}
+                <!-- Organization selection for students -->
+                <div class="form-group">
+                    <label for="existing_organization" class="form-label">Join Organization</label>
+                    <select name="existing_organization" id="existing_organization" class="form-select" required>
+                        <option value="">Select an organization</option>
+                        {% for org in organizations %}
+                        <option value="{{ org }}">{{ org }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+        </div>
+        
+        <div class="auth-footer">
+            <p>
+                Already have an account? 
+                <a href="{{ url_for('login', role=role) }}">Login</a>
+            </p>
+            <div>
+                {% if role == 'admin' %}
+                <a href="{{ url_for('signup', role='student') }}" style="color: var(--primary-color); font-size: 0.9rem;">
+                    <i class="fas fa-user-graduate"></i> Student Registration
+                </a>
+                {% else %}
+                <a href="{{ url_for('signup', role='admin') }}" style="color: var(--primary-color); font-size: 0.9rem;">
+                    <i class="fas fa-chalkboard-teacher"></i> Teacher Registration
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleOrgFields() {
+        const useExistingOrg = document.getElementById('use_existing_org').checked;
+        document.getElementById('existing_org_field').style.display = useExistingOrg ? 'block' : 'none';
+        document.getElementById('new_org_field').style.display = useExistingOrg ? 'none' : 'block';
+        
+        // Update required attributes
+        if (useExistingOrg) {
+            document.querySelector('select[name="existing_organization"]').setAttribute('required', '');
+            document.getElementById('organization_name').removeAttribute('required');
+        } else {
+            document.querySelector('select[name="existing_organization"]').removeAttribute('required');
+            document.getElementById('organization_name').setAttribute('required', '');
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only toggle org fields if the element exists
+        if (document.getElementById('use_existing_org')) {
+            toggleOrgFields();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,338 @@
+{% extends "layout.html" %}
+
+{% block title %}Assignment: {{ assignment.title }} - EduEval{% endblock %}
+
+{% block head %}
+<style>
+    .question-card {
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+    
+    .question-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .question-header {
+        padding: 1rem;
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .question-body {
+        padding: 1.5rem;
+        background-color: var(--card-bg);
+    }
+    
+    .question-footer {
+        padding: 1rem;
+        background-color: rgba(0, 0, 0, 0.03);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .fixed-action-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 900;
+    }
+    
+    .assignment-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .assignment-meta div {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    @media (max-width: 767.98px) {
+        .question-body {
+            padding: 1rem;
+        }
+        
+        .question-footer {
+            padding: 0.75rem;
+        }
+        
+        .uploader-container {
+            padding: 1rem;
+        }
+        
+        .preview-container {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        .assignment-meta div {
+            min-width: 120px;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .question-body {
+            padding: 0.75rem;
+        }
+        
+        .preview-container {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+        
+        .uploader-icon {
+            font-size: 2.5rem;
+        }
+        
+        .uploader-text {
+            font-size: 0.9rem;
+        }
+        
+        .uploader-subtext {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <!-- Assignment Header -->
+    <div class="assignment-card">
+        <div class="assignment-header">
+            <h2 class="assignment-title">{{ assignment.title }}</h2>
+            <div class="assignment-meta">
+                <div>
+                    <i class="fas fa-user"></i> Teacher: {{ assignment.creator.user.username }}
+                </div>
+                {% if assignment.deadline %}
+                <div>
+                    <i class="fas fa-clock"></i> Deadline: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+                {% else %}
+                <div>
+                    <i class="fas fa-clock"></i> No deadline
+                </div>
+                {% endif %}
+                
+                {% if submission %}
+                <div>
+                    <i class="fas fa-check-circle"></i> Submitted: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="assignment-body">
+            {% if submission %}
+            <!-- Submission Results -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="card-header" style="background-color: var(--success-color); color: white;">
+                    <h3><i class="fas fa-chart-bar"></i> Submission Results</h3>
+                </div>
+                <div class="card-body">
+                    {% if assignment.show_scores %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Total Score</h4>
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                                {% if submission.total_marks is not none %}
+                                    {{ submission.total_marks|round(2) }}
+                                {% else %}
+                                    0.00
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Relevance</h4>
+                            <div class="progress" style="height: 20px; margin-top: 10px;">
+                                <div class="progress-bar progress-bar-primary" role="progressbar" 
+                                    style="width: {{ submission.avg_relevance|default(0)|round(2) }}%;" 
+                                    aria-valuenow="{{ submission.avg_relevance|default(0)|round(2) }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ submission.avg_relevance|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4>Grammar</h4>
+                            <div class="progress" style="height: 20px; margin-top: 10px;">
+                                <div class="progress-bar progress-bar-success" role="progressbar" 
+                                    style="width: {{ submission.avg_grammar_score|default(0)|round(2) }}%;" 
+                                    aria-valuenow="{{ submission.avg_grammar_score|default(0)|round(2) }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ submission.avg_grammar_score|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Feedback:</strong> {{ submission.feedback }}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info" style="margin-bottom: 0;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-lock" style="font-size: 2rem;"></i>
+                            <div>
+                                <h4 style="margin-bottom: 0.25rem;">Scores are currently hidden</h4>
+                                <p style="margin-bottom: 0;">Your teacher has not yet made scores visible for this assignment.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Questions -->
+            <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-list-ol"></i> Questions</h3>
+            
+            {% for question in questions %}
+            <div class="question-card">
+                <div class="question-header">
+                    <h4>Question {{ loop.index }}</h4>
+                </div>
+                
+                <div class="question-body">
+                    <div class="question-text" style="font-size: 1.1rem; margin-bottom: 1rem;">
+                        {{ question.question_text }}
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-star"></i> Max Marks:</strong> {{ question.max_marks }}
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-font"></i> Expected Word Count:</strong> {{ question.word_count }}
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <strong><i class="fas fa-balance-scale"></i> Evaluation Method:</strong> 
+                            {% if question.evaluation_method == 'gemini' %}
+                            <span class="badge badge-primary">AI Evaluation</span>
+                            {% else %}
+                            <span class="badge badge-info">Answer Key</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if submission %}
+                    <!-- Show the response for submitted assignments -->
+                    {% set response = responses.get(question.id) %}
+                    {% if response %}
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <div class="card-header">
+                            Your Answer
+                        </div>
+                        <div class="card-body">
+                            <div style="background-color: rgba(0,0,0,0.05); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                                {{ response.extracted_text }}
+                            </div>
+                            
+                            {% if assignment.show_scores %}
+                            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Score:</strong> {{ response.marks_awarded|default(0)|round(2) }} / {{ question.max_marks }}
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Word Count:</strong> {{ response.word_count_actual }} / {{ question.word_count }}
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Relevance:</strong> {{ response.relevance_score|default(0)|round(2) }}%
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <strong>Feedback:</strong> {{ response.feedback }}
+                            </div>
+                            {% else %}
+                            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <strong>Word Count:</strong> {{ response.word_count_actual }} / {{ question.word_count }}
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-secondary">
+                                <i class="fas fa-lock"></i> Detailed feedback and scores are currently hidden by your teacher.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> No answer submitted for this question.
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <!-- Show upload form for non-submitted assignments -->
+                    <div class="uploader-container" data-question-id="{{ question.id }}">
+                        <input type="file" id="file-input-{{ question.id }}" accept=".jpg,.jpeg,.png" multiple style="display: none;">
+                        <div class="uploader-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="uploader-text">Drag & drop images or click to upload</div>
+                        <div class="uploader-subtext">Supported formats: JPG, JPEG, PNG</div>
+                    </div>
+                    
+                    <div id="preview-container-{{ question.id }}" class="preview-container" style="display: none;"></div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <label for="extracted-text-{{ question.id }}" class="form-label">Extracted Text:</label>
+                        <textarea id="extracted-text-{{ question.id }}" class="form-control" rows="5" readonly></textarea>
+                        <input type="hidden" id="image-paths-{{ question.id }}" value="[]">
+                    </div>
+                    
+                    <div id="result-container-{{ question.id }}"></div>
+                    {% endif %}
+                </div>
+                
+                <div class="question-footer">
+                    {% if not submission %}
+                    <button class="btn btn-primary submit-answer-btn" data-question-id="{{ question.id }}" data-assignment-id="{{ assignment.id }}">
+                        <i class="fas fa-paper-plane"></i> Submit Answer
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not submission %}
+            <!-- Final Submit Button (initially hidden) -->
+            <button id="finalize-submission-btn" data-assignment-id="{{ assignment.id }}" class="btn btn-success btn-lg" style="display: none;">
+                <i class="fas fa-check-circle"></i> Finalize Submission
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="submission-success-modal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Submission Successful!</h3>
+                <button type="button" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="font-size: 4rem; color: var(--success-color); margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p>Your assignment has been submitted successfully.</p>
+                <p>Redirecting to dashboard...</p>
+                <div class="spinner" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assignment.js') }}"></script>
+{% endblock %}

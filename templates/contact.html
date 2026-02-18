@@ -1,0 +1,192 @@
+{% extends "layout.html" %}
+
+{% block title %}Contact Us - EduEval{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container" style="align-items: flex-start; padding-top: 100px;">
+    <div class="auth-card animate-fadeIn" style="max-width: 800px; margin-bottom: 50px;">
+        <div class="auth-header">
+            <h2 class="auth-title">
+                <i class="fas fa-envelope"></i> Contact Us
+            </h2>
+        </div>
+        
+        <div class="auth-body">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <p>Have questions or need assistance? We're here to help!</p>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-bottom: 2rem;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h3><i class="fas fa-envelope"></i> Email</h3>
+                    <p>support@edueval.edu</p>
+                    <p>For technical assistance and general inquiries.</p>
+                </div>
+                
+                <div style="flex: 1; min-width: 250px;">
+                    <h3><i class="fas fa-phone"></i> Phone</h3>
+                    <p>+1 (555) 123-4567</p>
+                    <p>Available Monday-Friday, 9AM-5PM EST</p>
+                </div>
+            </div>
+            
+            <form id="contact-form">
+                <div class="form-group">
+                    <label for="name" class="form-label">Your Name</label>
+                    <input type="text" id="name" name="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject" class="form-label">Subject</label>
+                    <input type="text" id="subject" name="subject" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message" class="form-label">Message</label>
+                    <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </form>
+            
+            <div id="success-message" style="display: none; margin-top: 1rem;" class="alert alert-success">
+                Your message has been sent! We'll get back to you soon.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contactForm = document.getElementById('contact-form');
+        
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm(this)) {
+                showToast('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            // Show loading spinner
+            showSpinner('Sending your message...');
+            
+            // Simulate form submission
+            setTimeout(function() {
+                hideSpinner();
+                
+                // Clear form
+                contactForm.reset();
+                
+                // Show success message
+                document.getElementById('success-message').style.display = 'block';
+                
+                // Hide success message after 5 seconds
+                setTimeout(function() {
+                    document.getElementById('success-message').style.display = 'none';
+                }, 5000);
+                
+                showToast('Your message has been sent!', 'success');
+            }, 1500);
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-envelope"></i> Contact Us</h2>
+                </div>
+                <div class="card-body">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <p>Have questions or need assistance? We're here to help!</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-bottom: 2rem;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <h3><i class="fas fa-envelope"></i> Email</h3>
+                            <p>support@edueval.edu</p>
+                            <p>For technical assistance and general inquiries.</p>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 250px;">
+                            <h3><i class="fas fa-phone"></i> Phone</h3>
+                            <p>+1 (555) 123-4567</p>
+                            <p>Available Monday-Friday, 9AM-5PM EST</p>
+                        </div>
+                    </div>
+                    
+                    <form id="contact-form-logged-in">
+                        <div class="form-group">
+                            <label for="subject-logged-in" class="form-label">Subject</label>
+                            <input type="text" id="subject-logged-in" name="subject" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message-logged-in" class="form-label">Message</label>
+                            <textarea id="message-logged-in" name="message" class="form-control" rows="5" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                    </form>
+                    
+                    <div id="success-message-logged-in" style="display: none; margin-top: 1rem;" class="alert alert-success">
+                        Your message has been sent! We'll get back to you soon.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contactForm = document.getElementById('contact-form-logged-in');
+        
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validateForm(this)) {
+                    showToast('Please fill in all required fields', 'warning');
+                    return;
+                }
+                
+                // Show loading spinner
+                showSpinner('Sending your message...');
+                
+                // Simulate form submission
+                setTimeout(function() {
+                    hideSpinner();
+                    
+                    // Clear form
+                    contactForm.reset();
+                    
+                    // Show success message
+                    document.getElementById('success-message-logged-in').style.display = 'block';
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(function() {
+                        document.getElementById('success-message-logged-in').style.display = 'none';
+                    }, 5000);
+                    
+                    showToast('Your message has been sent!', 'success');
+                }, 1500);
+            });
+        }
+    });
+</script>
+{% endblock %}

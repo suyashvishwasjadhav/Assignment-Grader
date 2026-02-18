@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - EduEval{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <!-- Welcome section -->
+    <div style="margin-bottom: 2rem;">
+        <h1>Welcome, {{ user.username }}!</h1>
+        <p>Organization: <strong>{{ organization.name }}</strong></p>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-value">{{ assignments|length }}</div>
+            <div class="stat-label">Created Assignments</div>
+        </div>
+        
+        <div class="stat-card stat-success">
+            <div class="stat-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-value">{{ student_count }}</div>
+            <div class="stat-label">Students</div>
+        </div>
+        
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="stat-value">{{ submission_count }}</div>
+            <div class="stat-label">Submissions</div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div style="margin-bottom: 2rem;">
+        <h2>Quick Actions</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+            <a href="{{ url_for('create_assignment') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Create Assignment
+            </a>
+            <a href="{{ url_for('admin_students') }}" class="btn btn-info">
+                <i class="fas fa-users"></i> View Students
+            </a>
+            <a href="{{ url_for('admin_chat') }}" class="btn btn-success">
+                <i class="fas fa-comments"></i> Chat with Students
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Assignments -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-tasks"></i> Recent Assignments</h2>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Created</th>
+                            <th>Deadline</th>
+                            <th>Submissions</th>
+                            <th>Scores Visible</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.title }}</td>
+                            <td>{{ assignment.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if assignment.deadline %}
+                                {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                No deadline
+                                {% endif %}
+                            </td>
+                            <td>{{ assignment.submissions|length }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('toggle_scores', assignment_id=assignment.id) }}" style="display: inline-block;">
+                                    <button type="submit" class="badge {% if assignment.show_scores %}badge-success{% else %}badge-secondary{% endif %}" 
+                                            style="font-size: 0.9rem; border: none; cursor: pointer; padding: 0.4rem 0.7rem; transition: all 0.3s ease;">
+                                        {% if assignment.show_scores %}
+                                        <i class="fas fa-eye"></i> Visible
+                                        {% else %}
+                                        <i class="fas fa-eye-slash"></i> Hidden
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('edit_assignment', assignment_id=assignment.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View Submissions
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; color: var(--light-color); margin-bottom: 1rem;">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3>No Assignments Yet</h3>
+                <p>Get started by creating your first assignment.</p>
+                <a href="{{ url_for('create_assignment') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Create Assignment
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2><i class="fas fa-history"></i> Recent Submissions</h2>
+        </div>
+        <div class="card-body">
+            {% if recent_submissions %}
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Assignment</th>
+                            <th>Submitted</th>
+                            <th>Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in recent_submissions %}
+                        <tr>
+                            <td>{{ submission.user.username }}</td>
+                            <td>{{ submission.assignment.title }}</td>
+                            <td>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ submission.total_marks|round(2) }}</td>
+                            <td>
+                                <a href="{{ url_for('submission_details', submission_id=submission.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem;">
+                <p>No recent submissions yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

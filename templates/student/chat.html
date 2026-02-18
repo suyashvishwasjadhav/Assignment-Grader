@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}Chat with Teachers - EduEval{% endblock %}
+
+{% block head %}
+<style>
+    /* Mobile responsive styles for chat */
+    @media (max-width: 767.98px) {
+        .chat-container {
+            border-radius: 0;
+            height: calc(100vh - var(--header-height) - 2px);
+        }
+        
+        .chat-sidebar {
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+            max-height: 100%;
+        }
+        
+        .chat-sidebar.collapsed {
+            transform: translateY(-100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+        }
+        
+        .chat-users {
+            max-height: 60vh;
+        }
+        
+        .chat-main {
+            height: 100%;
+        }
+        
+        .chat-header {
+            padding: 0.75rem;
+        }
+        
+        .chat-header-toggle {
+            display: block;
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        
+        .chat-input {
+            padding: 0.5rem 1rem;
+        }
+        
+        .chat-send-btn {
+            padding: 0.5rem 0.75rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .chat-message {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.75rem;
+            max-width: 90%;
+            font-size: 0.9rem;
+        }
+        
+        .chat-message-time {
+            font-size: 0.7rem;
+        }
+        
+        .chat-user {
+            padding: 0.5rem;
+        }
+        
+        .chat-user-avatar {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .chat-header-avatar {
+            width: 30px;
+            height: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container animate-fadeIn">
+    <div class="chat-sidebar {% if chat_partner %}collapsed{% endif %}" id="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h3><i class="fas fa-comments"></i> Teachers</h3>
+        </div>
+        <ul class="chat-users">
+            {% for admin in admins %}
+            <li class="chat-user {% if chat_partner and chat_partner.id == admin.id %}active{% endif %}" data-user-id="{{ admin.id }}">
+                <img src="https://images.unsplash.com/photo-{% if loop.index is divisibleby 2 %}1630910561339-4e22c7150093{% else %}1601388352547-2802c6f32eb8{% endif %}" alt="{{ admin.username }}" class="chat-user-avatar">
+                <div class="chat-user-name">{{ admin.username }}</div>
+            </li>
+            {% else %}
+            <li class="chat-user" style="cursor: default; opacity: 0.7;">
+                <div style="padding: 1rem; text-align: center;">No teachers available</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="chat-main">
+        {% if chat_partner %}
+        <div class="chat-header">
+            <img src="https://images.unsplash.com/photo-{% if chat_partner.id is divisibleby 2 %}1630910561339-4e22c7150093{% else %}1601388352547-2802c6f32eb8{% endif %}" alt="{{ chat_partner.username }}" class="chat-header-avatar">
+            <div class="chat-header-name">{{ chat_partner.username }}</div>
+            <button class="chat-header-toggle" id="toggle-chat-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div id="chat-messages" class="chat-messages" data-user-id="{{ session.get('user_id') }}">
+            {% for message in messages %}
+            <div class="chat-message {% if message.sender_id == session.get('user_id') %}chat-message-sent{% else %}chat-message-received{% endif %}" data-message-id="{{ message.id }}">
+                {{ message.message }}
+                <div class="chat-message-time">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--text-color); opacity: 0.7;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <form id="chat-form" class="chat-form">
+            <input type="hidden" id="chat-partner-id" value="{{ chat_partner.id }}">
+            <input type="text" id="message-input" class="chat-input" placeholder="Type your message..." required>
+            <button type="submit" class="chat-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+        {% else %}
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-color); opacity: 0.7;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>Select a teacher to start chatting</h3>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

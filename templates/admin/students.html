@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{% if is_admin_list %}Fellow Educators{% else %}Students{% endif %} - EduEval
+{% endblock %}
+
+{% block content %}
+<div class="container animate-fadeIn">
+    <div class="card">
+        <div class="card-header">
+            <h2>
+                {% if is_admin_list %}
+                <i class="fas fa-user-tie"></i> Fellow Educators
+                {% else %}
+                <i class="fas fa-user-graduate"></i> Students
+                {% endif %}
+                in {{ session.get('organization') }}
+            </h2>
+        </div>
+        <div class="card-body">
+            {% if students %}
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <img src="https://images.unsplash.com/photo-{{ '1438761681033-6461ffad8d80' if loop.index is divisibleby 2 else '1628891435222-065925dcb365' if loop.index is divisibleby 3 else '1646617747609-45b466ace9a6' }}" 
+                                     alt="{{ student.username }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            </td>
+                            <td>{{ student.username }}</td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if is_admin_list %}
+                                <a href="#" class="btn btn-sm btn-info">
+                                    <i class="fas fa-id-card"></i> View Profile
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('admin_chat_with_student', student_id=student.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-comments"></i> Chat
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; color: var(--light-color); margin-bottom: 1rem;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>
+                    {% if is_admin_list %}
+                    No Other Educators Yet
+                    {% else %}
+                    No Students Yet
+                    {% endif %}
+                </h3>
+                <p>
+                    {% if is_admin_list %}
+                    You're the only educator in this organization.
+                    {% else %}
+                    There are no students in your organization yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
