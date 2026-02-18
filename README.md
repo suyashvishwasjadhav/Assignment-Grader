@@ -14,12 +14,12 @@
 
 ## Navigation
 - [Problem Statement](#problem-statement)
+- [System Diagram](#system-diagram)
 - [Project Overview](#project-overview)
 - [Key Features](#key-features)
 - [Core Modules & File Architecture](#core-modules--file-architecture)
 - [Technical Architecture](#technical-architecture)
 - [Evaluation Workflow](#evaluation-workflow)
-- [System Diagram](#system-diagram)
 - [Installation and Setup](#installation-and-setup)
 - [Future Scope](#future-scope)
 - [Security and Attribution](#security-and-attribution)
@@ -34,6 +34,42 @@ Traditional educational assessment methods are increasingly becoming a bottlenec
 3. **Delayed Feedback**: Students often receive feedback weeks after submission, reducing the impact of the learning correction phase.
 4. **Complexity in Diagrams**: Assessing the accuracy of flowcharts, circuit diagrams, and logical schemas requires specialized attention that is rarely automated effectively.
 5. **Academic Integrity**: Detecting nuanced plagiarism in textual and visual submissions is difficult with standard tools.
+
+---
+
+## System Diagram
+
+```mermaid
+graph TD
+    User((User)) -->|Login/OAuth| Auth[Authentication Service]
+    Auth -->|Success| Dash[User Dashboard]
+    
+    subgraph "Teacher Workflow"
+        Dash -->|Create| Ass[Assignment]
+        Ass -->|Define| Q[Questions & Answer Keys]
+    end
+    
+    subgraph "Student Workflow"
+        Dash -->|Submit| Sub[Student Submission]
+        Sub -->|Image/Text| OCR[OCR / Pre-processing]
+    end
+    
+    OCR -->|Extracted Data| Eval[AI Evaluation Engine]
+    
+    subgraph "Evaluation Engine"
+        Eval -->|Text| GeminiPro[Gemini 1.5 Pro]
+        Eval -->|Diagram| GeminiFlash[Gemini 1.5 Flash]
+        Eval -->|Similarity| NLP[NLP Metrics: TF-IDF/Cosine]
+    end
+    
+    GeminiPro --> Result[Score & Feedback]
+    GeminiFlash --> Result
+    NLP --> Result
+    
+    Result -->|Persist| DB[(PostgreSQL)]
+    Result -->|Display| Dash
+    Result -->|Notify| Email[SMTP Notification Service]
+```
 
 ---
 
@@ -117,42 +153,6 @@ The system is not just a grader; it is a pedagogical assistant that understands 
    - A Relevance Score (0-100) is generated.
    - Plagiarism checks are run against the answer key.
 5. **Storage & Feedback**: Results are persisted in the PostgreSQL database.
-
----
-
-## System Diagram
-
-```mermaid
-graph TD
-    User((User)) -->|Login/OAuth| Auth[Authentication Service]
-    Auth -->|Success| Dash[User Dashboard]
-    
-    subgraph "Teacher Workflow"
-        Dash -->|Create| Ass[Assignment]
-        Ass -->|Define| Q[Questions & Answer Keys]
-    end
-    
-    subgraph "Student Workflow"
-        Dash -->|Submit| Sub[Student Submission]
-        Sub -->|Image/Text| OCR[OCR / Pre-processing]
-    end
-    
-    OCR -->|Extracted Data| Eval[AI Evaluation Engine]
-    
-    subgraph "Evaluation Engine"
-        Eval -->|Text| GeminiPro[Gemini 1.5 Pro]
-        Eval -->|Diagram| GeminiFlash[Gemini 1.5 Flash]
-        Eval -->|Similarity| NLP[NLP Metrics: TF-IDF/Cosine]
-    end
-    
-    GeminiPro --> Result[Score & Feedback]
-    GeminiFlash --> Result
-    NLP --> Result
-    
-    Result -->|Persist| DB[(PostgreSQL)]
-    Result -->|Display| Dash
-    Result -->|Notify| Email[SMTP Notification Service]
-```
 
 ---
 
